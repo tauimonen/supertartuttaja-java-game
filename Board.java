@@ -1,7 +1,12 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
+
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.*;
 
 public class Board extends JPanel implements ActionListener, KeyListener {
@@ -10,9 +15,9 @@ public class Board extends JPanel implements ActionListener, KeyListener {
     private final int DELAY = 25;
     // controls the size of the board
     public static final int TILE_SIZE = 70;
-    public static final int ROWS = 12;
-    public static final int COLUMNS = 18;
-    // controls how many coins appear on the board
+    public static final int ROWS = 10;
+    public static final int COLUMNS = 15;
+    // controls how many viruses appear on the board
     public static final int NUM_COINS = 5;
     // suppress serialization warning
     private static final long serialVersionUID = 490905409104883233L;
@@ -22,9 +27,10 @@ public class Board extends JPanel implements ActionListener, KeyListener {
     private Timer timer;
     // objects that appear on the game board
     private Player player;
-    private ArrayList<Virus> coins;
+    private ArrayList<Virus> viruses;
 
     public Board() {
+        playSound("sounds/8-bit.wav");
         // set the game board size
         setPreferredSize(new Dimension(TILE_SIZE * COLUMNS, TILE_SIZE * ROWS));
         // set the game board background color
@@ -32,7 +38,7 @@ public class Board extends JPanel implements ActionListener, KeyListener {
 
         // initialize the game state
         player = new Player();
-        coins = populateCoins();
+        viruses = populateVirus();
 
         // this timer will call the actionPerformed() method every DELAY ms
         timer = new Timer(DELAY, this);
@@ -48,8 +54,8 @@ public class Board extends JPanel implements ActionListener, KeyListener {
         // prevent the player from disappearing off the board
         player.tick();
 
-        // give the player points for collecting coins
-        collectCoins();
+        // give the player points for collecting viruses
+        collectVirus();
 
         // calling repaint() will trigger paintComponent() to run again,
         // which will refresh/redraw the graphics.
@@ -67,8 +73,8 @@ public class Board extends JPanel implements ActionListener, KeyListener {
         // draw our graphics.
         // drawBackground(g);
         drawScore(g);
-        for (Virus coin : coins) {
-            coin.draw(g, this);
+        for (Virus virus : viruses) {
+            virus.draw(g, this);
         }
         player.draw(g, this);
 
@@ -111,6 +117,7 @@ public class Board extends JPanel implements ActionListener, KeyListener {
      * }
      * }
      */
+
     private void drawScore(Graphics g) {
         // set the text to be displayed
         String text = "POINTS: " + player.getScore();
@@ -126,7 +133,7 @@ public class Board extends JPanel implements ActionListener, KeyListener {
                 RenderingHints.KEY_FRACTIONALMETRICS,
                 RenderingHints.VALUE_FRACTIONALMETRICS_ON);
         // set the text color and font
-        g2d.setColor(new Color(30, 201, 139));
+        g2d.setColor(new Color(128, 0, 0));
         g2d.setFont(new Font("Lato", Font.BOLD, 25));
         // draw the score in the bottom center of the screen
         // https://stackoverflow.com/a/27740330/4655368
@@ -143,36 +150,77 @@ public class Board extends JPanel implements ActionListener, KeyListener {
         g2d.drawString(text, x, y);
     }
 
-    private ArrayList<Virus> populateCoins() {
-        ArrayList<Virus> coinList = new ArrayList<>();
+    private ArrayList<Virus> populateVirus() {
+        ArrayList<Virus> virusList = new ArrayList<>();
         Random rand = new Random();
 
-        // create the given number of coins in random positions on the board.
-        // note that there is not check here to prevent two coins from occupying the
+        // create the given number of viruses in random positions on the board.
+        // note that there is not check here to prevent two viruses from occupying the
         // same
         // spot, nor to prevent coins from spawning in the same spot as the player
         for (int i = 0; i < NUM_COINS; i++) {
-            int coinX = rand.nextInt(COLUMNS);
-            int coinY = rand.nextInt(ROWS);
-            coinList.add(new Virus(coinX, coinY));
+            int virusX = rand.nextInt(COLUMNS);
+            int virusY = rand.nextInt(ROWS);
+            virusList.add(new Virus(virusX, virusY));
         }
 
-        return coinList;
+        return virusList;
     }
 
-    private void collectCoins() {
+    private void collectVirus() {
         // allow player to pickup coins
-        ArrayList<Virus> collectedCoins = new ArrayList<>();
-        for (Virus coin : coins) {
+        ArrayList<Virus> collectedVirus = new ArrayList<>();
+        for (Virus virus : viruses) {
             // if the player is on the same tile as a coin, collect it
-            if (player.getPos().equals(coin.getPos())) {
+            if (player.getPos().equals(virus.getPos())) {
                 // give the player some points for picking this up
-                player.addScore(100);
-                collectedCoins.add(coin);
+                selectRandomSound();
+                player.addScore(1);
+                collectedVirus.add(virus);
             }
         }
-        // remove collected coins from the board
-        coins.removeAll(collectedCoins);
+        // remove collected viruses from the board
+        viruses.removeAll(collectedVirus);
+    }
+
+    private void selectRandomSound() {
+        playSound("sounds/man-coughing.wav");
+
+        /*
+         * int randomNum = 1 + (int) (Math.random() * 5);
+         * System.out.println(randomNum);
+         * switch (randomNum) {
+         * case 1:
+         * playSound("sounds/man-coughing.wav");
+         * break;
+         * case 2:
+         * playSound("sounds/man-sneeze.wav");
+         * break;
+         * case 3:
+         * playSound("sounds/nose-blowing.wav");
+         * case 4:
+         * playSound("sounds/women-coughing.wav");
+         * case 5:
+         * playSound("sounds/women-sneeze.wav");
+         * break;
+         * default:
+         * playSound("sounds/nose-blowing.wav");
+         * }
+         */
+    }
+
+    public void playSound(String soundFile) {
+        Clip clip;
+        AudioInputStream sound;
+        try {
+            File file = new File(soundFile);
+            sound = AudioSystem.getAudioInputStream(file);
+            clip = AudioSystem.getClip();
+            clip.open(sound);
+            clip.start();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 
 }
