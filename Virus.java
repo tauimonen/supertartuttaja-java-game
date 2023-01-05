@@ -8,9 +8,9 @@ import javax.imageio.ImageIO;
 
 public class Virus {
 
-    // image that represents the coin's position on the board
+    // image that represents the virus position on the board
     private BufferedImage image;
-    // current position of the coin on the board grid
+    // current position of the virus on the board grid
     private Point pos;
 
     public Virus(int x, int y) {

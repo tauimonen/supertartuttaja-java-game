@@ -18,7 +18,7 @@ public class Board extends JPanel implements ActionListener, KeyListener {
     public static final int ROWS = 10;
     public static final int COLUMNS = 15;
     // controls how many viruses appear on the board
-    public static final int NUM_COINS = 5;
+    public static final int NUM_VIRUS = 10;
     // suppress serialization warning
     private static final long serialVersionUID = 490905409104883233L;
 
@@ -158,7 +158,7 @@ public class Board extends JPanel implements ActionListener, KeyListener {
         // note that there is not check here to prevent two viruses from occupying the
         // same
         // spot, nor to prevent coins from spawning in the same spot as the player
-        for (int i = 0; i < NUM_COINS; i++) {
+        for (int i = 0; i < NUM_VIRUS; i++) {
             int virusX = rand.nextInt(COLUMNS);
             int virusY = rand.nextInt(ROWS);
             virusList.add(new Virus(virusX, virusY));
@@ -181,6 +181,8 @@ public class Board extends JPanel implements ActionListener, KeyListener {
         }
         // remove collected viruses from the board
         viruses.removeAll(collectedVirus);
+        if (viruses.isEmpty())
+            viruses = populateVirus();
     }
 
     private void selectRandomSound() {
